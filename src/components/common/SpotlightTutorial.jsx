@@ -78,6 +78,7 @@ export default function SpotlightTutorial({
   currentStep = 0,
   onStepChange,
   onFocusNode,
+  onEnsureStepPrerequisites,
 }) {
   const [targetRect, setTargetRect] = useState(null);
   const [cardPos, setCardPos] = useState({ x: 0, y: 0 });
@@ -90,6 +91,16 @@ export default function SpotlightTutorial({
   cardPosRef.current = cardPos;
 
   const step = TUTORIAL_STEPS[currentStep] || TUTORIAL_STEPS[0];
+
+  // 步驟變更或開啟導覽時，立即觸發前置條件確保 (如步驟 1 自動切換至 edit 模式與 data 工具分頁)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (currentStep === 0) {
+      onEnsureStepPrerequisites?.(0);
+    } else if (currentStep === 1 || currentStep === 2) {
+      onFocusNode?.("trigger-cron");
+    }
+  }, [isOpen, currentStep, onEnsureStepPrerequisites, onFocusNode]);
 
   // 計算目標元件的位置與大小 (精準鎖定，無任何跨屏飛行動畫)
   const updateTargetRect = useCallback(() => {
@@ -105,62 +116,71 @@ export default function SpotlightTutorial({
       el = document.querySelector(step.fallbackSelector);
     }
 
-    if (el) {
+    // 檢查元素是否存在且為可視狀態 (排除 display:none 或尚未掛載的隱藏元素)
+    const isVisible =
+      el &&
+      (el.offsetWidth > 0 ||
+        el.offsetHeight > 0 ||
+        (el.getClientRects && el.getClientRects().length > 0));
+
+    if (el && isVisible) {
       const r = el.getBoundingClientRect();
-      const pad = step.padding || 8;
-      const rect = {
-        x: Math.round(Math.max(0, r.left - pad)),
-        y: Math.round(Math.max(0, r.top - pad)),
-        width: Math.round(r.width + pad * 2),
-        height: Math.round(r.height + pad * 2),
-        radius: step.radius || 16,
-      };
+      if (r.width > 0 && r.height > 0) {
+        const pad = step.padding || 8;
+        const rect = {
+          x: Math.round(Math.max(0, r.left - pad)),
+          y: Math.round(Math.max(0, r.top - pad)),
+          width: Math.round(r.width + pad * 2),
+          height: Math.round(r.height + pad * 2),
+          radius: step.radius || 16,
+        };
 
-      if (!isSameRect(targetRectRef.current, rect)) {
-        setTargetRect(rect);
-      }
+        if (!isSameRect(targetRectRef.current, rect)) {
+          setTargetRect(rect);
+        }
 
-      // 計算氣泡卡片位置
-      const cardWidth = 340;
-      const cardHeight = cardRef.current?.offsetHeight || 160;
-      let x = 0;
-      let y = 0;
+        // 計算氣泡卡片位置
+        const cardWidth = 340;
+        const cardHeight = cardRef.current?.offsetHeight || 160;
+        let x = 0;
+        let y = 0;
 
-      switch (step.preferredPlacement) {
-        case "left":
-          x = rect.x - cardWidth - 16;
-          y = rect.y + rect.height / 2 - cardHeight / 2;
-          break;
-        case "right":
-          x = rect.x + rect.width + 16;
-          y = rect.y + rect.height / 2 - cardHeight / 2;
-          break;
-        case "top":
-          x = rect.x + rect.width / 2 - cardWidth / 2;
-          y = rect.y - cardHeight - 16;
-          break;
-        case "bottom":
-        default:
-          x = rect.x + rect.width / 2 - cardWidth / 2;
-          y = rect.y + rect.height + 16;
-          break;
-      }
+        switch (step.preferredPlacement) {
+          case "left":
+            x = rect.x - cardWidth - 16;
+            y = rect.y + rect.height / 2 - cardHeight / 2;
+            break;
+          case "right":
+            x = rect.x + rect.width + 16;
+            y = rect.y + rect.height / 2 - cardHeight / 2;
+            break;
+          case "top":
+            x = rect.x + rect.width / 2 - cardWidth / 2;
+            y = rect.y - cardHeight - 16;
+            break;
+          case "bottom":
+          default:
+            x = rect.x + rect.width / 2 - cardWidth / 2;
+            y = rect.y + rect.height + 16;
+            break;
+        }
 
-      // 視窗邊界夾取 (Clamping)，確保彈窗永遠在可視畫面中
-      const padding = 16;
-      const clampX = Math.round(
-        Math.max(padding, Math.min(window.innerWidth - cardWidth - padding, x))
-      );
-      const clampY = Math.round(
-        Math.max(padding, Math.min(window.innerHeight - cardHeight - padding, y))
-      );
+        // 視窗邊界夾取 (Clamping)，確保彈窗永遠在可視畫面中
+        const padding = 16;
+        const clampX = Math.round(
+          Math.max(padding, Math.min(window.innerWidth - cardWidth - padding, x))
+        );
+        const clampY = Math.round(
+          Math.max(padding, Math.min(window.innerHeight - cardHeight - padding, y))
+        );
 
-      const nextPos = { x: clampX, y: clampY };
-      if (!isSamePos(cardPosRef.current, nextPos)) {
-        setCardPos(nextPos);
+        const nextPos = { x: clampX, y: clampY };
+        if (!isSamePos(cardPosRef.current, nextPos)) {
+          setCardPos(nextPos);
+        }
       }
     } else {
-      // 找不到目標時居中備援
+      // 找不到目標或目標目前為隱藏狀態時，卡片居中備援且清空 spotlight rect，避免在 (0,0) 畫框
       const cardWidth = 340;
       const cardHeight = 160;
       const centerPos = {

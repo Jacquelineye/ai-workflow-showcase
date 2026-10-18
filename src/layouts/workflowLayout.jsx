@@ -625,6 +625,7 @@ export default function WorkflowLayout({
   selectedTool: propSelectedTool,
   mode: propMode,
   defaultMode = "edit",
+  sidebarTab: propSidebarTab,
   onAction,
   onToolSelect,
   onToolDragStart,
@@ -889,7 +890,15 @@ export default function WorkflowLayout({
   const isControlledTool = propTool !== undefined;
   const [internalTool, setInternalTool] = useState("pointer");
   const tool = isControlledTool ? propTool : internalTool;
-  const [sidebarTab, setSidebarTab] = useState("data");
+  const isControlledSidebarTab = propSidebarTab !== undefined;
+  const [internalSidebarTab, setInternalSidebarTab] = useState("data");
+  const sidebarTab = isControlledSidebarTab ? propSidebarTab : internalSidebarTab;
+
+  useEffect(() => {
+    if (propSidebarTab !== undefined) {
+      setInternalSidebarTab(propSidebarTab);
+    }
+  }, [propSidebarTab]);
 
   const [internalSelectedTool, setInternalSelectedTool] = useState(null);
   const selectedTool =
@@ -931,7 +940,9 @@ export default function WorkflowLayout({
 
   function chooseSidebar(next) {
     if (next === sidebarTab) return;
-    setSidebarTab(next);
+    if (!isControlledSidebarTab) {
+      setInternalSidebarTab(next);
+    }
     onSidebarTabChange?.(next);
   }
 

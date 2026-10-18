@@ -988,8 +988,19 @@ function syncAttachedComments(
 export default function App() {
   const [workflowTitle, setWorkflowTitle] = useState("每日最新設計文章爬蟲與 AI 摘要整理");
   const [mode, setMode] = useState("edit"); // "edit" | "history" (預設展示編輯畫布頁面)
+  const [sidebarTab, setSidebarTab] = useState("data"); // "data" | "ai" | "api"
   const [selectedRunId, setSelectedRunId] = useState("#1048"); // 預設選擇第 3 筆失敗紀錄 #1048 (對齊 Figma 附圖)
   const [isHistoryDetailOpen, setIsHistoryDetailOpen] = useState(true); // 預設開啟右側紀錄詳情面板
+
+  /* 教學步驟前置條件確保 (例如步驟 1 自動切換為 edit 模式與 data 工具分頁) */
+  const handleEnsureStepPrerequisites = useCallback((stepIdx) => {
+    if (stepIdx === 0) {
+      setMode((prev) => (prev !== "edit" ? "edit" : prev));
+      setSidebarTab((prev) => (prev !== "data" ? "data" : prev));
+      setSelectedNodeId((prev) => (prev !== null ? null : prev));
+      selectedNodeIdRef.current = null;
+    }
+  }, []);
 
   const activeRun = useMemo(() => {
     return RUNS_DATA.find((r) => r.id === selectedRunId) || RUNS_DATA[0];
@@ -2206,12 +2217,19 @@ export default function App() {
     animFrameRef.current = requestAnimationFrame(step);
   }, []);
 
-  /* 教學步驟 2 (點擊編輯項目) 或步驟 3 聚焦時，自動將目標節點平滑移動至畫面正中央 */
+  /* 教學步驟 1 前置狀態確保 (切換為 edit 模式與 data 分頁)，步驟 2 與 3 自動聚焦目標節點 */
   useEffect(() => {
-    if (isTutorialOpen && (tutorialStep === 1 || tutorialStep === 2)) {
-      setSelectedNodeId("trigger-cron");
-      selectedNodeIdRef.current = "trigger-cron";
-      centerNode("trigger-cron", true);
+    if (isTutorialOpen) {
+      if (tutorialStep === 0) {
+        setMode((prev) => (prev !== "edit" ? "edit" : prev));
+        setSidebarTab((prev) => (prev !== "data" ? "data" : prev));
+        setSelectedNodeId((prev) => (prev !== null ? null : prev));
+        selectedNodeIdRef.current = null;
+      } else if (tutorialStep === 1 || tutorialStep === 2) {
+        setSelectedNodeId("trigger-cron");
+        selectedNodeIdRef.current = "trigger-cron";
+        centerNode("trigger-cron", true);
+      }
     }
   }, [isTutorialOpen, tutorialStep, centerNode]);
 
@@ -2951,6 +2969,10 @@ export default function App() {
     } else if (action === "redo") {
       handleRedo();
     } else if (action === "tutorial") {
+      setMode("edit");
+      setSidebarTab("data");
+      setSelectedNodeId(null);
+      selectedNodeIdRef.current = null;
       setTutorialStep(0);
       setIsTutorialOpen(true);
     } else if (action === "test-workflow") {
@@ -3330,6 +3352,8 @@ export default function App() {
         canUndo={canUndo}
         canRedo={canRedo}
         mode={mode}
+        sidebarTab={sidebarTab}
+        onSidebarTabChange={setSidebarTab}
         onModeChange={(newMode) => {
           setMode(newMode);
           if (newMode === "history") {
@@ -3984,9 +4008,15 @@ export default function App() {
       isOpen={isTutorialOpen}
       onClose={handleCloseTutorial}
       currentStep={tutorialStep}
+      onEnsureStepPrerequisites={handleEnsureStepPrerequisites}
       onStepChange={(stepIdx) => {
         setTutorialStep(stepIdx);
-        if (stepIdx === 1 || stepIdx === 2) {
+        if (stepIdx === 0) {
+          setMode("edit");
+          setSidebarTab("data");
+          setSelectedNodeId(null);
+          selectedNodeIdRef.current = null;
+        } else if (stepIdx === 1 || stepIdx === 2) {
           setSelectedNodeId("trigger-cron");
           selectedNodeIdRef.current = "trigger-cron";
           centerNode("trigger-cron", true);
