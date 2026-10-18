@@ -1072,7 +1072,7 @@ export default function App() {
 
   /* 縮放與平移狀態 */
   const [zoom, setZoom] = useState(60);
-  const [pan, setPan] = useState({ x: -9, y: 154 });
+  const [pan, setPan] = useState({ x: 368, y: 171 });
   const [isCentered, setIsCentered] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
 
@@ -1676,19 +1676,40 @@ export default function App() {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const activeDetailNode = selectedNode || previewToolNode;
 
-  /* 預設使資料置中出現在正中間 (Requirement 3) */
+  /* 預設畫面進入時，trigger 節點應位於畫布正中間 (Requirement) */
   useEffect(() => {
     if (!canvasRef.current || isCentered) return;
-    const { clientWidth, clientHeight } = canvasRef.current;
-    if (clientWidth > 0 && clientHeight > 0) {
-      const scale = zoom / 100;
-      const initialPanX = Math.round(clientWidth / 2 - 940 * scale);
-      const initialPanY = Math.round(clientHeight / 2 - 280 * scale);
-      panRef.current = { x: initialPanX, y: initialPanY };
-      setPan({ x: initialPanX, y: initialPanY });
-      setIsCentered(true);
-    }
-  }, [isCentered, zoom]);
+
+    const tryCenter = () => {
+      if (!canvasRef.current || isCentered) return;
+      const { clientWidth, clientHeight } = canvasRef.current;
+      if (clientWidth > 0 && clientHeight > 0) {
+        const scale = zoom / 100;
+        const triggerNode =
+          nodes.find((n) => n.id === "trigger-cron" || n.category === "trigger") ||
+          nodes[0];
+        const triggerX = triggerNode?.x ?? 80;
+        const triggerY = triggerNode?.y ?? 240;
+        const triggerCenterX = triggerX + NODE_WIDTH / 2;
+        const triggerCenterY = triggerY + 118 / 2;
+
+        const initialPanX = Math.round(clientWidth / 2 - triggerCenterX * scale);
+        const initialPanY = Math.round(clientHeight / 2 - triggerCenterY * scale);
+        panRef.current = { x: initialPanX, y: initialPanY };
+        setPan({ x: initialPanX, y: initialPanY });
+        setIsCentered(true);
+      }
+    };
+
+    tryCenter();
+    const raf = requestAnimationFrame(tryCenter);
+    const timer = setTimeout(tryCenter, 60);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, [isCentered, zoom, nodes]);
 
   /* 左鍵拖動畫布或新增留言 */
   const handleCanvasMouseDown = (e) => {
@@ -3139,9 +3160,10 @@ export default function App() {
         if (canvasRef.current) {
           const { clientWidth, clientHeight } = canvasRef.current;
           if (clientWidth > 0 && clientHeight > 0) {
-            const scale = zoom / 100;
-            const initialPanX = Math.round(clientWidth / 2 - 940 * scale);
-            const initialPanY = Math.round(clientHeight / 2 - 280 * scale);
+            const triggerCenterX = 80 + NODE_WIDTH / 2;
+            const triggerCenterY = 240 + 118 / 2;
+            const initialPanX = Math.round(clientWidth / 2 - triggerCenterX * scale);
+            const initialPanY = Math.round(clientHeight / 2 - triggerCenterY * scale);
             panRef.current = { x: initialPanX, y: initialPanY };
             setPan({ x: initialPanX, y: initialPanY });
           }
