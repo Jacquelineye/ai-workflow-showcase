@@ -179,14 +179,14 @@ const TimePicker = ({ label, required, error, errorMessage, helperText, classNam
 function resolveToolId(node) {
   if (node.toolId) return node.toolId;
   const id = node.id || "";
-  if (id.startsWith("trigger-") || id === "tigger") return "tigger";
+  if (id.startsWith("trigger-") || id === "tigger" || id === "trigger") return "trigger";
   if (id === "data-fetch" || id === "action-crm" || id.includes("database")) return "database";
   if (id === "ai-sentiment" || id.includes("llm")) return "llm";
   if (id === "branch-split" || id.includes("branch")) return "branch";
   if (id === "action-slack" || id.includes("bot") || id.includes("slack")) return "bot-integration";
 
   const title = node.title || "";
-  if (title.includes("Tigger") || title.includes("觸發")) return "tigger";
+  if (title.includes("Trigger") || title.includes("Tigger") || title.includes("觸發")) return "trigger";
   if (title.includes("條件") || title.includes("分支")) return "branch";
   if (title.includes("迴圈")) return "loop";
   if (title.includes("延遲")) return "delay";
@@ -217,10 +217,11 @@ function resolveToolId(node) {
   if (title.includes("資料庫") || title.includes("SQL")) return "database";
   if (title.includes("儲存") || title.includes("S3") || title.includes("雲端")) return "cloud-storage";
 
-  return "tigger";
+  return "trigger";
 }
 
 export const TOOL_TITLES = {
+  trigger: "定時觸發",
   tigger: "定時觸發",
   branch: "條件分支",
   loop: "迴圈迭代",
@@ -530,6 +531,7 @@ function NodeSpecificConfig({ toolId, params, updateParam }) {
     // ---------------------------------------------------------
     // 1. Data: 流程控制與觸發
     // ---------------------------------------------------------
+    case "trigger":
     case "tigger": {
       const cronVal = params.cron !== undefined ? params.cron : "0 10 * * *";
       const isCronEmpty = !cronVal.trim();

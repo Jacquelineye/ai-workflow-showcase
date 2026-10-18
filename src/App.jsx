@@ -273,7 +273,7 @@ const INITIAL_NODES = [
     id: "trigger-cron",
     isFixed: true,
     isRootTrigger: true,
-    toolId: "tigger",
+    toolId: "trigger",
     itemTitle: "定時觸發",
     name: "每日上午 10:00 定時啟動",
     title: "每日上午 10:00 定時啟動",
@@ -521,8 +521,14 @@ const NODE_HEIGHT = 140;
 /* 右側工具對應之節點範本 */
 const TOOL_NODE_MAP = {
   // Data: 流程控制與觸發
+  trigger: {
+    title: "Trigger 觸發節點",
+    subtitle: "工作流程起始事件觸發器",
+    category: "trigger",
+    iconKey: "trigger",
+  },
   tigger: {
-    title: "Tigger 觸發節點",
+    title: "Trigger 觸發節點",
     subtitle: "工作流程起始事件觸發器",
     category: "trigger",
     iconKey: "trigger",
@@ -741,7 +747,10 @@ function createNodeFromTool(toolItem, x, y) {
     iconKey: "database",
   };
 
-  const isTrigger = toolItem.id === "tigger" || template.category === "trigger";
+  const isTrigger =
+    toolItem.id === "trigger" ||
+    toolItem.id === "tigger" ||
+    template.category === "trigger";
   const newId = `node-${toolItem.id}-${Date.now().toString(36)}`;
   const itemTitle = TOOL_TITLES[toolItem.id] || template.title;
   return {
@@ -2732,7 +2741,10 @@ export default function App() {
       iconKey: "database",
     };
 
-    const isTrigger = toolItem.id === "tigger" || template.category === "trigger";
+    const isTrigger =
+      toolItem.id === "trigger" ||
+      toolItem.id === "tigger" ||
+      template.category === "trigger";
     const previewNode = {
       id: `preview-${toolItem.id}`,
       toolId: toolItem.id,
@@ -2917,7 +2929,7 @@ export default function App() {
         id: "trigger-cron",
         isFixed: true,
         isRootTrigger: true,
-        toolId: "tigger",
+        toolId: "trigger",
         itemTitle: "定時觸發",
         name: "定時觸發",
         title: "定時觸發",
@@ -3034,7 +3046,7 @@ export default function App() {
           id: "trigger-cron",
           isFixed: true,
           isRootTrigger: true,
-          toolId: "tigger",
+          toolId: "trigger",
           itemTitle: "定時觸發",
           name: "定時觸發",
           title: "定時觸發",
@@ -3156,7 +3168,7 @@ export default function App() {
                     data-ghost-title="true"
                     className="m-0 truncate text-label-2 font-medium text-fontcolor"
                   >
-                    Tigger 觸發節點
+                    Trigger 觸發節點
                   </h3>
                   <p
                     data-ghost-subtitle="true"

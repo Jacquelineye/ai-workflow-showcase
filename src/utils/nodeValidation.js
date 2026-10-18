@@ -9,6 +9,14 @@
 
 export const DEFAULT_NODE_PARAMS = {
   // 1. 流程控制與觸發
+  trigger: {
+    triggerType: "schedule",
+    time: "10:00 AM",
+    date: "Oct 18, 2026",
+    cron: "0 10 * * *",
+    timezone: "Asia/Taipei",
+    active: true,
+  },
   tigger: {
     triggerType: "schedule",
     time: "10:00 AM",
@@ -263,6 +271,7 @@ export function validateNode(node, connections = [], allNodes = []) {
 
   const isTrigger =
     node.category === "trigger" ||
+    node.toolId === "trigger" ||
     node.toolId === "tigger" ||
     node.id === "trigger-cron" ||
     Boolean(node.isTrigger);
@@ -276,7 +285,7 @@ export function validateNode(node, connections = [], allNodes = []) {
 
   // 4. 各工具特定欄位邏輯檢查
   // A. 定時觸發 (Cron / Once / Webhook)
-  if (isTrigger || toolId === "tigger") {
+  if (isTrigger || toolId === "trigger" || toolId === "tigger") {
     const triggerType = params.triggerType || "schedule";
     if (triggerType === "once") {
       if (!params.date || !String(params.date).trim()) {

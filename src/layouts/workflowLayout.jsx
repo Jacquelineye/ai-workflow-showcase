@@ -156,7 +156,7 @@ const ICONS = {
 
   statistics: <path d="M20 4H5l8 8-8 8h15M3 4v16" />,
 
-  /* 流程控制與觸發：Tigger (觸發器) */
+  /* 流程控制與觸發：Trigger (觸發器) */
   trigger: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
 
   /* 迴圈迭代 */
@@ -361,7 +361,7 @@ const SIDEBAR_CONTENT = {
     {
       title: "流程控制與觸發",
       items: [
-        { id: "tigger", label: "Tigger", icon: "trigger" },
+        { id: "trigger", label: "Trigger", icon: "trigger" },
         { id: "branch", label: "條件分支", icon: "branch" },
         { id: "loop", label: "迴圈迭代", icon: "loop" },
         { id: "delay", label: "延遲等待", icon: "delay" },
