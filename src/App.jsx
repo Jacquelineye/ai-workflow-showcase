@@ -6,6 +6,7 @@ import Button from "./components/ui/button.jsx";
 import NodeDetailPanel, { TOOL_TITLES, resolveItemTitle } from "./components/detail/NodeDetailPanel.jsx";
 import ExecutionHistoryView, { RUNS_DATA } from "./components/history/ExecutionHistoryView.jsx";
 import ExecutionDetailPanel from "./components/history/ExecutionDetailPanel.jsx";
+import SpotlightTutorial from "./components/common/SpotlightTutorial.jsx";
 import { validateNode, getDefaultParamsForTool } from "./utils/nodeValidation.js";
 
 const CATEGORY_STYLES = {
@@ -1014,6 +1015,25 @@ export default function App() {
   const [previewToolNode, setPreviewToolNode] = useState(null);
   const [isDraggingTool, setIsDraggingTool] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  /* 新手教學導覽狀態 (預設在首次載入時自動啟動，儲存至 localStorage) */
+  const [isTutorialOpen, setIsTutorialOpen] = useState(() => {
+    try {
+      return !localStorage.getItem("ai_workflow_tutorial_completed");
+    } catch {
+      return true;
+    }
+  });
+  const [tutorialStep, setTutorialStep] = useState(0);
+
+  const handleCloseTutorial = useCallback(() => {
+    setIsTutorialOpen(false);
+    try {
+      localStorage.setItem("ai_workflow_tutorial_completed", "true");
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   /* 全域監聽拖曳結束事件，確保任何情況下恢復拖曳狀態 */
   useEffect(() => {
@@ -2548,6 +2568,13 @@ export default function App() {
             },
           ];
           pushHistory(undefined, nextConns, undefined);
+
+          // 若教學導覽正處於步驟 3 (連接節點)，自動完成導覽並提示
+          if (isTutorialOpen && tutorialStep === 2) {
+            handleCloseTutorial();
+            showToast("🎉 恭喜！您已完成新手操作教學，隨時可點擊右上角「?」重新檢視！");
+          }
+
           return nextConns;
         });
       }
@@ -2723,6 +2750,11 @@ export default function App() {
 
       // 自動跟蹤定位，鎖定視野使其置於設定視窗左側安全位置，完全不被遮擋
       focusNode(newNode.id, nextNodes, true);
+
+      // 若教學導覽正處於步驟 1 (拖曳新增節點)，自動推進至步驟 2
+      if (isTutorialOpen && tutorialStep === 0) {
+        setTutorialStep(1);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -2827,6 +2859,9 @@ export default function App() {
       handleUndo();
     } else if (action === "redo") {
       handleRedo();
+    } else if (action === "tutorial") {
+      setTutorialStep(0);
+      setIsTutorialOpen(true);
     } else if (action === "test-workflow") {
       // 1. 識別畫布上所有啟用的觸發節點 (Trigger)
       const isTrigger = (n) =>
@@ -3501,6 +3536,10 @@ export default function App() {
                         if (nodeHasMovedRef.current) return;
                         if (tool === "limit" || tool === "comment") return;
                         focusNode(node.id, null, true);
+                        // 若教學導覽正處於步驟 2 (點擊編輯節點)，自動推進至步驟 3
+                        if (isTutorialOpen && tutorialStep === 1) {
+                          setTutorialStep(2);
+                        }
                       }}
                     />
                   </div>
@@ -3847,6 +3886,22 @@ export default function App() {
         </div>
       </div>
     )}
+
+    {/* 新手操作教學聚光燈導覽 (Spotlight Tutorial) */}
+    <SpotlightTutorial
+      isOpen={isTutorialOpen}
+      onClose={handleCloseTutorial}
+      currentStep={tutorialStep}
+      onStepChange={(stepIdx) => {
+        setTutorialStep(stepIdx);
+        if (stepIdx === 1 || stepIdx === 2) {
+          focusNode("trigger-cron", null, true);
+        }
+      }}
+      onFocusNode={(nodeId) => {
+        focusNode(nodeId, null, true);
+      }}
+    />
     </>
   );
 }

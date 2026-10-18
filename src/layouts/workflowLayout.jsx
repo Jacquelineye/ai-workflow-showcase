@@ -280,6 +280,15 @@ const ICONS = {
     </>
   ),
 
+  /* 操作導覽教學 (Help) */
+  help: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </>
+  ),
+
   /* Google Docs */
   docs: (
     <>
@@ -477,6 +486,8 @@ function ToolSection({
         {group.items.map((item) => (
           <ListItemComp
             key={item.id}
+            id={`tool-item-${item.id}`}
+            data-tool-id={item.id}
             selected={selectedTool === item.id}
             showLeftIcon
             leftIcon={<LayoutIcon name={item.icon} />}
@@ -1006,17 +1017,26 @@ export default function WorkflowLayout({
           )}
         </nav>
 
-        {/* 右上操作：僅保留分享 */}
+        {/* 右上操作：操作教學與分享 */}
         <nav
           data-component="NavbarActions"
           aria-label="工作流程操作"
-          className="flex shrink-0 items-center rounded-full bg-white p-4 border border-stroke shadow-none"
+          className="flex shrink-0 items-center gap-4 rounded-full bg-white p-4 border border-stroke shadow-none"
         >
+          <Btn
+            variant="ghost"
+            iconOnly
+            icon={<LayoutIcon name="help" />}
+            aria-label="操作教學"
+            title="操作教學導覽"
+            onClick={() => onAction?.("tutorial")}
+          />
           <Btn
             variant="ghost"
             iconOnly
             icon={<LayoutIcon name="share" />}
             aria-label="分享"
+            title="分享工作流程"
             onClick={() => {
               setIsShareModalOpen(true);
               onAction?.("share");
