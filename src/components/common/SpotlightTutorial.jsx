@@ -20,7 +20,6 @@ export const TUTORIAL_STEPS = [
     icon: "layers",
     description:
       "從右側工具箱挑選您需要的節點（例如 Trigger 觸發器），按住並拖曳至畫布任意位置，即可建立新的自動化步驟。",
-    tip: "💡 提示：按住左鍵直接拖曳右側的項目至中間畫布，放開即可放置節點。",
     targetSelector: "#tool-item-trigger",
     fallbackSelector: '[data-tool-id="trigger"]',
     preferredPlacement: "left",
@@ -34,7 +33,6 @@ export const TUTORIAL_STEPS = [
     icon: "pen",
     description:
       "點選畫布上的任一節點卡片，即可選取該節點並展開詳細設定面板，自訂排程時間、API 網址或 AI 模型參數。",
-    tip: "💡 提示：被選取的節點周圍會顯示外框，卡片下方工具列亦可快速複製或停用節點。",
     targetSelector: "#node-trigger-cron",
     fallbackSelector: '[id^="node-"]',
     preferredPlacement: "bottom",
@@ -48,7 +46,6 @@ export const TUTORIAL_STEPS = [
     icon: "branch",
     description:
       "將游標移至節點四周的圓形端點（上下左右），按住並拖曳拉出連接線至另一個節點，即可完成資料流串接！",
-    tip: "💡 提示：每個節點皆具備上下左右 4 個連接端點，點擊連線也可以隨時選取或調整路線。",
     targetSelector: '[data-node-id="trigger-cron"][data-port="right"]',
     fallbackSelector: "#node-trigger-cron",
     preferredPlacement: "right",
@@ -125,7 +122,7 @@ export default function SpotlightTutorial({
 
       // 計算氣泡卡片位置
       const cardWidth = 340;
-      const cardHeight = cardRef.current?.offsetHeight || 230;
+      const cardHeight = cardRef.current?.offsetHeight || 160;
       let x = 0;
       let y = 0;
 
@@ -165,7 +162,7 @@ export default function SpotlightTutorial({
     } else {
       // 找不到目標時居中備援
       const cardWidth = 340;
-      const cardHeight = 230;
+      const cardHeight = 160;
       const centerPos = {
         x: Math.round(Math.max(16, (window.innerWidth - cardWidth) / 2)),
         y: Math.round(Math.max(16, (window.innerHeight - cardHeight) / 2)),
@@ -323,13 +320,6 @@ export default function SpotlightTutorial({
           <p className="m-0 text-caption-1 text-description leading-relaxed">
             {step.description}
           </p>
-
-          {/* 實用提示小卡 */}
-          {step.tip && (
-            <div className="rounded-xl bg-bg/80 p-8 text-caption-2 text-fontcolor/80 leading-normal border border-stroke/60">
-              {step.tip}
-            </div>
-          )}
         </div>
 
         {/* 底部導覽列：略過 + 3 進度點 + 上一步/下一步 */}
