@@ -1082,7 +1082,7 @@ export default function App() {
   const [justSubmittedCommentId, setJustSubmittedCommentId] = useState(null);
 
   /* 縮放與平移狀態 */
-  const [zoom, setZoom] = useState(60);
+  const [zoom, setZoom] = useState(85);
   const [pan, setPan] = useState({ x: 368, y: 171 });
   const [isCentered, setIsCentered] = useState(false);
   const [isPanning, setIsPanning] = useState(false);

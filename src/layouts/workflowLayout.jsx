@@ -616,7 +616,7 @@ export default function WorkflowLayout({
   sidebarPanels = {},
   historySidebar,
 
-  defaultZoom = 60,
+  defaultZoom = 85,
   zoom: propZoom,
   tool: propTool,
   canUndo = false,
