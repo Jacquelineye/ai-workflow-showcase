@@ -2121,8 +2121,78 @@ export default function App() {
       }
     };
 
+  }, []);
+
+  /* 將指定節點精準移動並置中於畫面正中央 (水平與垂直完全居中) */
+  const centerNode = useCallback((nodeId, animate = true) => {
+    if (!canvasRef.current || !nodeId) return;
+
+    const currentNodes = nodesRef.current;
+    const node = currentNodes.find((n) => n.id === nodeId);
+    if (!node) return;
+
+    const { clientWidth, clientHeight } = canvasRef.current;
+    if (clientWidth <= 0 || clientHeight <= 0) return;
+
+    const scale = zoomRef.current / 100;
+    const size = nodeSizesRef.current[nodeId];
+    const nodeW = size?.width || NODE_WIDTH;
+    const nodeH = size?.height || (node.comment ? 154 : 118);
+
+    const nodeCenterX = node.x + nodeW / 2;
+    const nodeCenterY = node.y + nodeH / 2;
+
+    const targetPanX = Math.round(clientWidth / 2 - nodeCenterX * scale);
+    const targetPanY = Math.round(clientHeight / 2 - nodeCenterY * scale);
+
+    if (!animate) {
+      panRef.current = { x: targetPanX, y: targetPanY };
+      setPan({ x: targetPanX, y: targetPanY });
+      return;
+    }
+
+    const startPanX = panRef.current.x;
+    const startPanY = panRef.current.y;
+    const dist = Math.hypot(targetPanX - startPanX, targetPanY - startPanY);
+    if (dist < 4) return;
+
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+
+    const duration = 280;
+    const startTime = performance.now();
+
+    const step = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      const currentX = Math.round(startPanX + (targetPanX - startPanX) * ease);
+      const currentY = Math.round(startPanY + (targetPanY - startPanY) * ease);
+
+      panRef.current = { x: currentX, y: currentY };
+      setPan({ x: currentX, y: currentY });
+
+      if (progress < 1) {
+        animFrameRef.current = requestAnimationFrame(step);
+      } else {
+        animFrameRef.current = null;
+      }
+    };
+
     animFrameRef.current = requestAnimationFrame(step);
   }, []);
+
+  /* 教學步驟 2 (點擊編輯項目) 或步驟 3 聚焦時，自動將目標節點平滑移動至畫面正中央 */
+  useEffect(() => {
+    if (isTutorialOpen && (tutorialStep === 1 || tutorialStep === 2)) {
+      setSelectedNodeId("trigger-cron");
+      selectedNodeIdRef.current = "trigger-cron";
+      centerNode("trigger-cron", true);
+    }
+  }, [isTutorialOpen, tutorialStep, centerNode]);
 
   /* 當點擊設定視窗或空白區域時，若底層有畫布卡片重疊，立即選取並聚焦該卡片 */
   const handleSelectUnderlyingNode = useCallback(
@@ -3897,6 +3967,7 @@ export default function App() {
         if (stepIdx === 1 || stepIdx === 2) {
           setSelectedNodeId("trigger-cron");
           selectedNodeIdRef.current = "trigger-cron";
+          centerNode("trigger-cron", true);
         }
       }}
       onFocusNode={(nodeId) => {
