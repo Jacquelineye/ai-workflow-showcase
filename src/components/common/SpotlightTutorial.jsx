@@ -322,15 +322,15 @@ export default function SpotlightTutorial({
           </p>
         </div>
 
-        {/* 底部導覽列：略過 + 3 進度點 + 上一步/下一步 */}
+        {/* 底部導覽列：略過 + 3 進度點 + 上一步/下一步/完成 */}
         <div className="flex items-center justify-between pt-8 border-t border-stroke/60 mt-4">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={onClose}
-            className="text-caption-1 text-description hover:text-fontcolor font-medium transition-colors cursor-pointer py-4 px-2"
+            className="!h-[36px] !px-8 text-caption-1 text-description hover:text-fontcolor font-medium"
           >
             略過
-          </button>
+          </Button>
 
           {/* 3 個進度圓點 */}
           <div className="flex items-center gap-6">
@@ -350,13 +350,13 @@ export default function SpotlightTutorial({
             ))}
           </div>
 
-          {/* 操作按鈕組 */}
+          {/* 操作按鈕組 (統一採用元件庫 36px 高度) */}
           <div className="flex items-center gap-6">
             {currentStep > 0 && (
               <Button
                 variant="ghost"
                 onClick={() => onStepChange?.(currentStep - 1)}
-                className="!h-[32px] !px-12 text-caption-1"
+                className="!h-[36px] !px-12 text-caption-1 font-medium"
               >
                 上一步
               </Button>
@@ -371,9 +371,9 @@ export default function SpotlightTutorial({
                   onClose?.();
                 }
               }}
-              className="!h-[32px] !px-14 text-caption-1 font-medium shadow-drop-s"
+              className="!h-[36px] !px-16 text-caption-1 font-medium shadow-drop-s"
             >
-              {currentStep === TUTORIAL_STEPS.length - 1 ? "完成教學" : "下一步"}
+              {currentStep === TUTORIAL_STEPS.length - 1 ? "完成" : "下一步"}
             </Button>
           </div>
         </div>
