@@ -18,13 +18,16 @@ const PanelDisabledContext = createContext(false);
 const Input = ({ required, error, errorMessage, ...props }) => {
   const disabled = useContext(PanelDisabledContext);
   const isEmpty = Boolean(
-    required &&
+    !disabled &&
+      required &&
       (props.value === undefined ||
         props.value === null ||
         String(props.value).trim() === "")
   );
-  const isError = Boolean(error || isEmpty);
-  const finalErrorMessage = errorMessage || (isEmpty ? "此為必填欄位，尚未填寫" : undefined);
+  const isError = Boolean(!disabled && (error || isEmpty));
+  const finalErrorMessage = !disabled
+    ? errorMessage || (isEmpty ? "此為必填欄位，尚未填寫" : undefined)
+    : undefined;
 
   return (
     <BaseInput
@@ -40,13 +43,16 @@ const Input = ({ required, error, errorMessage, ...props }) => {
 const Select = ({ required, error, errorMessage, ...props }) => {
   const disabled = useContext(PanelDisabledContext);
   const isEmpty = Boolean(
-    required &&
+    !disabled &&
+      required &&
       (props.value === undefined ||
         props.value === null ||
         String(props.value).trim() === "")
   );
-  const isError = Boolean(error || isEmpty);
-  const finalErrorMessage = errorMessage || (isEmpty ? "請選擇此項目" : undefined);
+  const isError = Boolean(!disabled && (error || isEmpty));
+  const finalErrorMessage = !disabled
+    ? errorMessage || (isEmpty ? "請選擇此項目" : undefined)
+    : undefined;
 
   return (
     <BaseSelect
@@ -84,13 +90,16 @@ const Slider = (props) => {
 const Textarea = ({ required, error, errorMessage, ...props }) => {
   const disabled = useContext(PanelDisabledContext);
   const isEmpty = Boolean(
-    required &&
+    !disabled &&
+      required &&
       (props.value === undefined ||
         props.value === null ||
         String(props.value).trim() === "")
   );
-  const isError = Boolean(error || isEmpty);
-  const finalErrorMessage = errorMessage || (isEmpty ? "此為必填欄位，尚未填寫" : undefined);
+  const isError = Boolean(!disabled && (error || isEmpty));
+  const finalErrorMessage = !disabled
+    ? errorMessage || (isEmpty ? "此為必填欄位，尚未填寫" : undefined)
+    : undefined;
 
   return (
     <BaseTextarea
@@ -106,13 +115,16 @@ const Textarea = ({ required, error, errorMessage, ...props }) => {
 const DatePicker = ({ label, required, error, errorMessage, helperText, className = "", ...props }) => {
   const disabled = useContext(PanelDisabledContext);
   const isEmpty = Boolean(
-    required &&
+    !disabled &&
+      required &&
       (props.value === undefined ||
         props.value === null ||
         String(props.value).trim() === "")
   );
-  const isError = Boolean(error || isEmpty);
-  const finalErrorMessage = errorMessage || (isEmpty ? "此為必填欄位，請選擇日期" : undefined);
+  const isError = Boolean(!disabled && (error || isEmpty));
+  const finalErrorMessage = !disabled
+    ? errorMessage || (isEmpty ? "此為必填欄位，請選擇日期" : undefined)
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -141,13 +153,16 @@ const DatePicker = ({ label, required, error, errorMessage, helperText, classNam
 const TimePicker = ({ label, required, error, errorMessage, helperText, className = "", ...props }) => {
   const disabled = useContext(PanelDisabledContext);
   const isEmpty = Boolean(
-    required &&
+    !disabled &&
+      required &&
       (props.value === undefined ||
         props.value === null ||
         String(props.value).trim() === "")
   );
-  const isError = Boolean(error || isEmpty);
-  const finalErrorMessage = errorMessage || (isEmpty ? "此為必填欄位，請選擇時間" : undefined);
+  const isError = Boolean(!disabled && (error || isEmpty));
+  const finalErrorMessage = !disabled
+    ? errorMessage || (isEmpty ? "此為必填欄位，請選擇時間" : undefined)
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -373,18 +388,26 @@ export function NodeDetailPanel({
     e.stopPropagation();
   };
 
-  // 即時計算當前編輯草稿之驗證狀態
-  const liveValidation = validateNode(
-    {
-      ...node,
-      name: localName,
-      title: localName,
-      params: localParams,
-    },
-    connections,
-    allNodes
-  );
-  const displayValidation = liveValidation?.status !== "valid" ? liveValidation : (validation?.status !== "valid" ? validation : null);
+  // 即時計算當前編輯草稿之驗證狀態 (在預覽時不計算亦不提示錯誤)
+  const liveValidation = isReadOnly
+    ? { status: "valid" }
+    : validateNode(
+        {
+          ...node,
+          name: localName,
+          title: localName,
+          params: localParams,
+        },
+        connections,
+        allNodes
+      );
+  const displayValidation = !isReadOnly
+    ? liveValidation?.status !== "valid"
+      ? liveValidation
+      : validation?.status !== "valid"
+      ? validation
+      : null
+    : null;
 
   return (
     <aside
@@ -427,8 +450,8 @@ export function NodeDetailPanel({
         </div>
       )}
 
-      {/* 節點驗證狀態橫幅 (錯誤 / 尚未填寫完整) */}
-      {!isDisabledFlow && mode === "edit" && displayValidation?.status && displayValidation.status !== "valid" && (
+      {/* 節點驗證狀態橫幅 (錯誤 / 尚未填寫完整) - 預覽時不提示錯誤 */}
+      {!isDisabledFlow && !isReadOnly && mode === "edit" && displayValidation?.status && displayValidation.status !== "valid" && (
         <div
           className={`mt-10 rounded-xl p-10 border text-caption-2 flex items-start gap-8 leading-relaxed transition-all shadow-xs ${
             displayValidation.status === "error"

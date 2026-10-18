@@ -234,6 +234,11 @@ export function getDefaultParamsForTool(toolId) {
 export function validateNode(node, connections = [], allNodes = []) {
   if (!node) return { status: "valid" };
 
+  // 0. 若為預覽節點 (側邊欄工具預覽或 isPreview 標記)，在預覽時都不該提示錯誤
+  if (node.isPreview) {
+    return { status: "valid" };
+  }
+
   // 1. 若節點已被使用者明確停用，保持正常無錯誤
   if (node.disabled) {
     return { status: "valid" };
@@ -452,8 +457,9 @@ export function validateNode(node, connections = [], allNodes = []) {
     }
   }
 
-  // E. AI 語言模型 (LLM)
-  if (toolId === "llm" || node.category === "ai" || node.iconKey === "sparkles") {
+  // E. AI 工具分類獨立驗證
+  // 1. AI 語言模型 (LLM)
+  if (toolId === "llm" || (!toolId && node.iconKey === "sparkles")) {
     if (!params.model) {
       return {
         status: "warning",
@@ -479,6 +485,102 @@ export function validateNode(node, connections = [], allNodes = []) {
         blocking: false,
         badgeText: "尚未填寫完整",
         message: "Prompt 提示詞尚未填寫",
+      };
+    }
+  }
+
+  // 2. AI 代理 (AI Agent)
+  if (toolId === "ai-agent" || (!toolId && node.iconKey === "robot")) {
+    if (!params.agentRole || !String(params.agentRole).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未填寫代理名稱與角色",
+      };
+    }
+  }
+
+  // 3. 結構化資訊擷取 (Structured Extract)
+  if (toolId === "structured-extract" || (!toolId && node.iconKey === "structure")) {
+    if (!params.schema || !String(params.schema).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未填寫目標 JSON Schema 定義",
+      };
+    }
+  }
+
+  // 4. 知識庫問答 (KB QA)
+  if (toolId === "kb-qa" || (!toolId && node.iconKey === "book")) {
+    if (!params.kbId || !String(params.kbId).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未選取關聯知識庫",
+      };
+    }
+  }
+
+  // 5. 向量檢索 (Vector Search)
+  if (toolId === "vector-search" || (!toolId && node.iconKey === "search")) {
+    if (!params.dbType || !String(params.dbType).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未選取向量資料庫連線",
+      };
+    }
+  }
+
+  // 6. 文字向量化 (Text Embedding)
+  if (toolId === "text-embedding" || (!toolId && node.iconKey === "embedding")) {
+    if (!params.embeddingModel || !String(params.embeddingModel).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未選取向量嵌入模型",
+      };
+    }
+  }
+
+  // 7. 圖像生成 (Image Gen)
+  if (toolId === "image-gen" || (!toolId && node.iconKey === "image")) {
+    if (!params.prompt || !String(params.prompt).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未填寫繪圖提示詞",
+      };
+    }
+  }
+
+  // 8. 語音轉文字 (Speech to Text)
+  if (toolId === "speech-to-text" || (!toolId && node.iconKey === "mic")) {
+    if (!params.sttModel || !String(params.sttModel).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未選取語音辨識模型",
+      };
+    }
+  }
+
+  // 9. 文字轉語音 (Text to Speech)
+  if (toolId === "text-to-speech" || (!toolId && node.iconKey === "speaker")) {
+    if (!params.voice || !String(params.voice).trim()) {
+      return {
+        status: "warning",
+        blocking: false,
+        badgeText: "尚未填寫完整",
+        message: "尚未選取語音發音人",
       };
     }
   }

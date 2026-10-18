@@ -3910,7 +3910,7 @@ export default function App() {
             >
               <NodeDetailPanel
                 node={activeDetailNode}
-                validation={activeDetailNode ? nodeValidations[activeDetailNode.id] : null}
+                validation={activeDetailNode && !activeDetailNode.isPreview ? nodeValidations[activeDetailNode.id] : null}
                 connections={connections}
                 allNodes={nodes}
                 isPreview={Boolean(activeDetailNode.isPreview)}
