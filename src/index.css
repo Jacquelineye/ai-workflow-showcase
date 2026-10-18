@@ -1,0 +1,335 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* 全域完全隱藏數字輸入框 (input[type="number"]) 原生上下微調箭頭 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+/* 全域精緻淡灰色滾軸 (無黑底，透明軌道，懸浮或滾動時顯現) */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(203, 213, 225, 0.4) !important;
+  border-radius: 9999px;
+  transition: background-color 0.25s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8 !important;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(203, 213, 225, 0.4) transparent;
+}
+
+/* 卡片內部滾軸：平時隱藏，滾動或滑鼠懸浮時才顯現淡灰色 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.25s ease;
+}
+
+.custom-scrollbar:hover,
+.custom-scrollbar:active,
+.custom-scrollbar.is-scrolling {
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent !important;
+  border-radius: 9999px;
+  transition: background-color 0.25s ease;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb,
+.custom-scrollbar:active::-webkit-scrollbar-thumb,
+.custom-scrollbar.is-scrolling::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8 !important;
+}
+
+/* 留言泡泡放開時的物理彈跳特效 */
+@keyframes bubbleDrop {
+  0% {
+    transform: scale(1.32) translateY(-6px);
+  }
+  35% {
+    transform: scale(0.9) translateY(2px);
+  }
+  65% {
+    transform: scale(1.08) translateY(-1px);
+  }
+  85% {
+    transform: scale(0.98) translateY(0.5px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 留言泡泡放置時的衝擊波光環擴散特效 */
+@keyframes dropRipple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.85;
+    border-color: #5D84A2;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+    border-color: #5D84A2;
+  }
+}
+
+.animate-bubble-drop {
+  animation: bubbleDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-drop-ripple {
+  animation: dropRipple 0.6s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+  @media (max-width: 1024px) {
+    font-size: 36px;
+    margin: 20px 0;
+  }
+}
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+p {
+  margin: 0;
+}
+
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+/* Drawer 抽屜進出場與遮罩動畫 */
+@keyframes drawerSlideInLeft {
+  from {
+    transform: translateX(calc(-100% - 32px));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawerSlideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawerSlideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(calc(-100% - 32px));
+    opacity: 0;
+  }
+}
+
+@keyframes drawerSlideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes drawerFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-drawer-in-left {
+  animation: drawerSlideInLeft 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-drawer-in-right {
+  animation: drawerSlideInRight 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-drawer-out-left {
+  animation: drawerSlideOutLeft 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-drawer-out-right {
+  animation: drawerSlideOutRight 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-drawer-backdrop {
+  animation: drawerFadeIn 280ms ease forwards;
+}
+
+.animate-drawer-backdrop-out {
+  animation: drawerFadeOut 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* 抽屜內分頁切換平移動畫軌道 (工作流程 <-> 服務憑證 雙向絲滑平移) */
+.drawer-tab-track {
+  display: flex !important;
+  flex-direction: row !important;
+  height: 100% !important;
+  width: 200% !important;
+  transition: transform 380ms cubic-bezier(0.25, 1, 0.5, 1) !important;
+  will-change: transform;
+}
+
+.drawer-tab-track[data-tab="workflows"] {
+  transform: translateX(0) !important;
+}
+
+.drawer-tab-track[data-tab="credentials"] {
+  transform: translateX(-50%) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-tab-track {
+    transition: none !important;
+  }
+}
+
+
