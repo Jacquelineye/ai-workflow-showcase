@@ -3895,11 +3895,13 @@ export default function App() {
       onStepChange={(stepIdx) => {
         setTutorialStep(stepIdx);
         if (stepIdx === 1 || stepIdx === 2) {
-          focusNode("trigger-cron", null, true);
+          setSelectedNodeId("trigger-cron");
+          selectedNodeIdRef.current = "trigger-cron";
         }
       }}
       onFocusNode={(nodeId) => {
-        focusNode(nodeId, null, true);
+        setSelectedNodeId(nodeId);
+        selectedNodeIdRef.current = nodeId;
       }}
     />
     </>

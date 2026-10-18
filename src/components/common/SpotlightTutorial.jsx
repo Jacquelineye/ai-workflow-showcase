@@ -8,9 +8,9 @@ function cx(...classes) {
 
 /**
  * 教學流程步驟定義 (3 個核心步驟)
- * 1. 拖曳項目 (從右側工具箱拖曳節點到畫布)
- * 2. 點擊編輯項目 (點選畫布卡片開啟右側設定)
- * 3. 連接節點 (拖曳端點建立連線)
+ * 1. 拖曳新增節點 (右側工具箱 -> 畫布)
+ * 2. 點擊編輯項目 (選取畫布卡片開啟右側設定)
+ * 3. 連接流程節點 (拖曳端點建立連線)
  */
 export const TUTORIAL_STEPS = [
   {
@@ -52,10 +52,28 @@ export const TUTORIAL_STEPS = [
     targetSelector: '[data-node-id="trigger-cron"][data-port="right"]',
     fallbackSelector: "#node-trigger-cron",
     preferredPlacement: "right",
-    padding: 12,
+    padding: 10,
     radius: 9999,
   },
 ];
+
+function isSameRect(a, b) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return (
+    Math.abs(a.x - b.x) < 0.5 &&
+    Math.abs(a.y - b.y) < 0.5 &&
+    Math.abs(a.width - b.width) < 0.5 &&
+    Math.abs(a.height - b.height) < 0.5 &&
+    a.radius === b.radius
+  );
+}
+
+function isSamePos(a, b) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5;
+}
 
 export default function SpotlightTutorial({
   isOpen,
@@ -68,13 +86,19 @@ export default function SpotlightTutorial({
   const [cardPos, setCardPos] = useState({ x: 0, y: 0 });
   const cardRef = useRef(null);
 
+  const targetRectRef = useRef(targetRect);
+  targetRectRef.current = targetRect;
+
+  const cardPosRef = useRef(cardPos);
+  cardPosRef.current = cardPos;
+
   const step = TUTORIAL_STEPS[currentStep] || TUTORIAL_STEPS[0];
 
-  // 計算目標元件的位置與大小
+  // 計算目標元件的位置與大小 (精準鎖定，無任何跨屏飛行動畫)
   const updateTargetRect = useCallback(() => {
     if (!isOpen) return;
 
-    // 若在步驟 2 或 3，主動聚焦並選取目標節點，確保其端點與狀態能被正確渲染出來
+    // 若在步驟 2 或 3，主動選取目標節點，讓端點可視化
     if (currentStep === 1 || currentStep === 2) {
       onFocusNode?.("trigger-cron");
     }
@@ -88,13 +112,16 @@ export default function SpotlightTutorial({
       const r = el.getBoundingClientRect();
       const pad = step.padding || 8;
       const rect = {
-        x: Math.max(0, r.left - pad),
-        y: Math.max(0, r.top - pad),
-        width: r.width + pad * 2,
-        height: r.height + pad * 2,
+        x: Math.round(Math.max(0, r.left - pad)),
+        y: Math.round(Math.max(0, r.top - pad)),
+        width: Math.round(r.width + pad * 2),
+        height: Math.round(r.height + pad * 2),
         radius: step.radius || 16,
       };
-      setTargetRect(rect);
+
+      if (!isSameRect(targetRectRef.current, rect)) {
+        setTargetRect(rect);
+      }
 
       // 計算氣泡卡片位置
       const cardWidth = 340;
@@ -124,52 +151,53 @@ export default function SpotlightTutorial({
 
       // 視窗邊界夾取 (Clamping)，確保彈窗永遠在可視畫面中
       const padding = 16;
-      const clampX = Math.max(
-        padding,
-        Math.min(window.innerWidth - cardWidth - padding, x)
+      const clampX = Math.round(
+        Math.max(padding, Math.min(window.innerWidth - cardWidth - padding, x))
       );
-      const clampY = Math.max(
-        padding,
-        Math.min(window.innerHeight - cardHeight - padding, y)
+      const clampY = Math.round(
+        Math.max(padding, Math.min(window.innerHeight - cardHeight - padding, y))
       );
 
-      setCardPos({ x: clampX, y: clampY });
+      const nextPos = { x: clampX, y: clampY };
+      if (!isSamePos(cardPosRef.current, nextPos)) {
+        setCardPos(nextPos);
+      }
     } else {
       // 找不到目標時居中備援
       const cardWidth = 340;
       const cardHeight = 230;
-      setCardPos({
-        x: Math.max(16, (window.innerWidth - cardWidth) / 2),
-        y: Math.max(16, (window.innerHeight - cardHeight) / 2),
-      });
-      setTargetRect(null);
+      const centerPos = {
+        x: Math.round(Math.max(16, (window.innerWidth - cardWidth) / 2)),
+        y: Math.round(Math.max(16, (window.innerHeight - cardHeight) / 2)),
+      };
+      if (!isSamePos(cardPosRef.current, centerPos)) {
+        setCardPos(centerPos);
+      }
+      if (targetRectRef.current !== null) {
+        setTargetRect(null);
+      }
     }
   }, [isOpen, currentStep, step, onFocusNode]);
 
-  // 當開啟、切換步驟或視窗大小改變時重新計算
+  // 高幀率即時同步鎖定目標位置，防止畫面捲動或視窗調整時邊框脫節
   useEffect(() => {
     if (!isOpen) return;
 
-    // 先立即執行一次，並在 80ms 後再度執行以等待 DOM / 動畫就緒
     updateTargetRect();
-    const t1 = setTimeout(updateTargetRect, 80);
-    const t2 = setTimeout(updateTargetRect, 220);
 
-    const handleResize = () => updateTargetRect();
-    const handleScroll = () => updateTargetRect();
-
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("scroll", handleScroll, true);
+    let animId = null;
+    const loop = () => {
+      updateTargetRect();
+      animId = requestAnimationFrame(loop);
+    };
+    animId = requestAnimationFrame(loop);
 
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("scroll", handleScroll, true);
+      if (animId) cancelAnimationFrame(animId);
     };
   }, [isOpen, currentStep, updateTargetRect]);
 
-  // 鍵盤導航支援：ESC 關閉、方向鍵切換步驟
+  // 鍵盤快捷鍵：ESC 關閉、方向鍵切換步驟
   useEffect(() => {
     if (!isOpen) return;
 
@@ -200,9 +228,9 @@ export default function SpotlightTutorial({
       role="dialog"
       aria-modal="true"
       aria-label="操作教學導覽"
-      className="fixed inset-0 z-50 select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 select-none animate-in fade-in duration-150"
     >
-      {/* 聚光燈 SVG 遮罩 (全螢幕暗化 + 鏤空高亮目標) */}
+      {/* 聚光燈 SVG 遮罩 (全螢幕暗化 + 鏤空高亮目標，無跨屏移動過渡) */}
       <svg
         className="fixed inset-0 h-full w-full pointer-events-none"
         style={{ zIndex: 51 }}
@@ -211,7 +239,7 @@ export default function SpotlightTutorial({
           <mask id="tutorial-spotlight-mask">
             {/* 白色覆蓋所有區域 */}
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
-            {/* 黑色鏤空高亮目標 */}
+            {/* 黑色鏤空高亮目標 (直接鎖定座標，不使用 CSS 過渡) */}
             {targetRect && (
               <rect
                 x={targetRect.x}
@@ -225,7 +253,7 @@ export default function SpotlightTutorial({
             )}
           </mask>
         </defs>
-        {/* 半透明黑色遮罩，套用 mask 挖洞 */}
+        {/* 半透明黑色遮罩 */}
         <rect
           x="0"
           y="0"
@@ -238,11 +266,12 @@ export default function SpotlightTutorial({
         />
       </svg>
 
-      {/* 目標周圍呼吸燈光環 (Pulse Beacon Ring) */}
+      {/* 目標周圍呼吸高亮框：使用 key={currentStep}，換步時直接切換淡入，不跨屏滑動 */}
       {targetRect && (
         <div
+          key={`beacon-${currentStep}`}
           aria-hidden="true"
-          className="fixed pointer-events-none border-2 border-primary ring-4 ring-primary/25 shadow-drop-m animate-pulse transition-all duration-300 ease-out"
+          className="fixed pointer-events-none border-2 border-primary ring-4 ring-primary/25 shadow-drop-m animate-in fade-in duration-150"
           style={{
             zIndex: 52,
             left: `${targetRect.x}px`,
@@ -254,12 +283,13 @@ export default function SpotlightTutorial({
         />
       )}
 
-      {/* 教學氣泡引導卡片 (符合設計系統規範) */}
+      {/* 教學氣泡引導卡片：換步時直接在目標旁淡入，不跨螢幕平移 */}
       <div
+        key={`card-${currentStep}`}
         ref={cardRef}
         role="region"
         aria-live="polite"
-        className="fixed w-[340px] rounded-[22px] rounded-4xl bg-white p-20 shadow-drop-l border border-stroke text-left font-primary flex flex-col gap-12 transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] animate-in zoom-in-95 duration-150"
+        className="fixed w-[340px] rounded-[22px] rounded-4xl bg-white p-20 shadow-drop-l border border-stroke text-left font-primary flex flex-col gap-12 animate-in fade-in duration-150"
         style={{
           zIndex: 53,
           left: `${cardPos.x}px`,
